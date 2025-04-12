@@ -55,3 +55,7 @@ def botanical_clock(ctler: Controller, jump_frame=False):  # 生物钟. 卡相�
 
     iz_test.start_test(jump_frame, speed_rate=5)
     print(row_one_fail_count, row_five_fail_count)
+
+
+if __name__ == '__main__':
+    botanical_clock()
