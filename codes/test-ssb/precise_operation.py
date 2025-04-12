@@ -6,8 +6,9 @@ from rpze.iztest.operations import place
 from rpze.rp_extend import Controller
 
 
-def fun(ctler: Controller):
-    test_n = 1000
+def fun(ctler: Controller, test_n: int = 1000) -> float:
+    """"""
+
     iz_test = IzTest(ctler).init_by_str(f'''
         {test_n} -1
         1-0
@@ -39,5 +40,5 @@ def fun(ctler: Controller):
     print(f"测试{test_n}次, 成功{iz_test._success_count}次")
 
 
-with InjectedGame(r"../../pvz_v1.0.0.1051_EN/Plants vs. Zombies 1.0.0.1051 EN/PlantsVsZombies.exe") as game:
-    fun(game.controller)
+with InjectedGame(r"../pvz1.0.0.1051_en/PlantsVsZombies.exe") as game:
+    fun(game.controller, test_n=1000)

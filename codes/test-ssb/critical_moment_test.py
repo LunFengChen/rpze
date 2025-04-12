@@ -4,10 +4,19 @@ from rpze.rp_extend import Controller
 from rpze.flow.flow import FlowManager
 
 
-def run_test(ctler: Controller, moment: int, n: int = 1000) -> float:
-    """运行一次测试，返回成功率"""
+def run_test(ctler: Controller, moment: int, test_n: int = 1000) -> float:
+    """
+    运行测试并返回成功率
+    Args:
+        ctler: 游戏控制器
+        moment: 释放时机
+        test_n: 测试样本量
+
+    Returns:
+        成功率
+    """
     iz_test = IzTest(ctler).init_by_str(f'''
-        {n} -1
+        {test_n} -1
         1-0
         2bllb
         .....
@@ -34,16 +43,28 @@ def run_test(ctler: Controller, moment: int, n: int = 1000) -> float:
 
     iz_test.start_test(jump_frame=1, print_interval=100)  # 跳帧且每100次打印
 
-    success_rate = iz_test._success_count / n  # 计算成功率
+    success_rate = iz_test._success_count / test_n  # 计算成功率
     aver_succ = succ_time / iz_test._success_count if iz_test._success_count != 0 else -1  # 单位cs
     print(
-        f"时机={moment}cs, 测试{n}次, 成功{iz_test._success_count}次, 成功率{success_rate * 100:.2f}%, 成功平均用时{aver_succ / 100:.2f}s")
+        f"时机={moment}cs, 测试{test_n}次, 成功{iz_test._success_count}次, 成功率{success_rate * 100:.2f}%, 成功平均用时{aver_succ / 100:.2f}s")
 
     return success_rate
 
 
 def binary_search(ctler: Controller, low: int, high: int, min_success_rate: float, test_n: int = 100) -> int:
-    """二分法寻找突变时机"""
+    """
+        二分法寻找突变时机
+    Args:
+        ctler: 游戏控制器
+        low: 低时机
+        high: 高时机
+        min_success_rate: 设置的最低过率
+        test_n: 测试样本量
+
+    Returns:
+        此次寻找到的时机
+
+    """
     result = -1  # 记录突变时机
     while low <= high:
         mid = (low + high) // 2  # 取中间时机
@@ -61,7 +82,7 @@ def binary_search(ctler: Controller, low: int, high: int, min_success_rate: floa
     return result
 
 
-def test_around_moment(ctler: Controller, moment: int, range_cs: int = 20, test_n: int = 100):
+def test_around_moment(ctler: Controller, moment: int, range_cs: int = 10, test_n: int = 100):
     """测试突变时机周围的数据，并按照规则打印"""
     result_records = []
     for m in range(moment - range_cs, moment + range_cs + 1):
@@ -108,7 +129,7 @@ def test_around_moment(ctler: Controller, moment: int, range_cs: int = 20, test_
             print(f"{moment}\t{rate * 100:.2f}%")
 
 
-def fun(ctler: Controller):
+with InjectedGame(r"../../pvz_v1.0.0.1051_EN/Plants vs. Zombies 1.0.0.1051 EN/PlantsVsZombies.exe") as game:
     test_n = 1000  # 每次测试的样本量
     init_moment = 200  # 初始时机，单位cs
     min_success_rate = 0.60  # 最低成功率(98%)
@@ -116,15 +137,12 @@ def fun(ctler: Controller):
     range_cs = 20  # 突变周围10cs
 
     # 使用二分法寻找突变时机
-    mutation_moment = binary_search(ctler, init_moment - rollbackable_moment, init_moment, min_success_rate, test_n)
+    mutation_moment = binary_search(game.controller, init_moment - rollbackable_moment, init_moment, min_success_rate,
+                                    test_n)
 
     if mutation_moment != -1:
         print(f"找到突变时机：{mutation_moment}cs")
         print(f"测试突变时机周围{range_cs}cs的数据：")
-        test_around_moment(ctler, mutation_moment, range_cs=range_cs, test_n=test_n)
+        test_around_moment(game.controller, mutation_moment, range_cs=range_cs, test_n=test_n)
     else:
         print("未找到突变时机")
-
-
-with InjectedGame(r"../../pvz_v1.0.0.1051_EN/Plants vs. Zombies 1.0.0.1051 EN/PlantsVsZombies.exe") as game:
-    fun(game.controller)
